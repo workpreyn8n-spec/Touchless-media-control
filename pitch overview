@@ -1,0 +1,16 @@
+# Project Pitch Overview
+
+# Idea
+A touchless media control system using hand gestures and AI-based keypoint detection.
+
+# Problem
+Physical controls are inconvenient in presentations and hands-busy scenarios.
+
+# Solution
+A real-time, camera based gesture interface. 
+
+# AI Advantage
+Uses hand keypoints instead of pixels, enabling gesture interpretation.
+
+# Vision
+Build natural, reliable human–machine interfaces using AI.
