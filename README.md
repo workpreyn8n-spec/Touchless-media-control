@@ -42,7 +42,8 @@ This project explores a "touchless alternative" using computer vision and AI-bas
 # Demo
 
 Demo Video:  
-....
+Test:https://youtu.be/x_AGR9c5ZhM
+Working:https://youtu.be/dXByQ8O1E9A
 
 # Limitations
 
