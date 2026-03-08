@@ -1,0 +1,139 @@
+Running the Gesture Volume Control System
+
+### Prerequisites
+
+Make sure you have the following installed:
+
+- Python 3.9+
+- A working webcam
+- Windows OS (media keys are used for system control)
+
+Check your Python version:
+
+```bash
+python --version
+```
+
+---
+
+### Clone the Repository
+
+Clone the project to your local machine:
+
+```bash
+git clone https://github.com/<your-username>/gesture-hci-system.git
+cd gesture-hci-system
+```
+
+---
+
+### ️Install Dependencies
+
+Install all required Python libraries:
+
+```bash
+pip install -r requirements.txt 
+```
+
+Required libraries include:
+
+- ultralytics
+- opencv-python
+- numpy
+- keyboard
+
+---
+
+### Download the Model
+
+Place the trained YOLO model file:
+
+```
+best.pt
+```
+
+inside the project directory.
+
+Your folder structure should look like this:
+
+```
+gesture-based-volume-control/
+│
+├── volume_control.py
+├── best.pt
+├── requirements.txt
+```
+
+---
+
+### Run the Program
+
+Start the gesture control system:
+
+```bash
+python volume_control.py
+```
+
+Your webcam will open and begin detecting hand gestures.
+
+---
+
+##  How to Use
+
+### Volume Control
+
+Move **thumb and index finger apart** → Increase volume  
+Move **thumb and index finger closer** → Decrease volume  
+
+The system calculates the distance between these keypoints and converts it into **OS-level volume adjustments**.
+
+---
+
+### Play / Pause
+
+Raise your hand **above the threshold line**(green line) and hold briefly to trigger:
+
+```
+Play / Pause
+---
+
+## How the System Works
+
+The system processes each webcam frame using the following pipeline:
+
+1. **Hand Keypoint Detection**  
+   YOLO detects 21 hand keypoints.
+
+2. **Distance Measurement**  
+   Thumb–index distance is calculated to determine volume changes.
+
+3. **Jitter Suppression**  
+   EMA smoothing stabilizes keypoint movement across frames.
+
+4. **Deadzone Filtering**  
+   Small movements are ignored to prevent accidental volume changes.
+
+5. **OS-Level Control**  
+   Gestures are translated into Windows media key actions.
+
+---
+
+## Tips for Best Performance
+
+- Use good lighting
+- Keep your hand within camera view
+- Maintain moderate distance from the webcam
+- Avoid rapid hand shaking
+
+---
+
+##  Demo
+
+Watch the project demonstration:
+
+```
+https://youtu.be/dXByQ8O1E9A
+https://youtu.be/x_AGR9c5ZhM
+```
+
+---
