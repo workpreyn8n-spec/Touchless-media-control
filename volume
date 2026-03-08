@@ -1,0 +1,117 @@
+from ultralytics import YOLO 
+import cv2
+import numpy as np
+import time
+import keyboard
+
+# ---------------- MODEL ----------------
+model = YOLO("best.pt")
+
+# ---------------- WEBCAM ----------------
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+FRAME_HEIGHT = 480
+RAISE_THRESHOLD_Y = int(0.3 * FRAME_HEIGHT)  # top 30% of frame
+
+# ---------------- PARAMETERS ----------------
+MIN_DIST = 35
+MAX_DIST = 180
+
+EMA_ALPHA = 0.2
+VOLUME_DEADZONE = 3
+VOLUME_STEP_PERCENT = 2
+
+PLAY_HOLD_TIME = 0.6
+PLAY_COOLDOWN = 1.2
+
+# ---------------- STATE ----------------
+ema_dist = None
+prev_volume = None
+
+raise_start = None
+play_locked = False
+last_play_time = 0
+
+# ---------------- HELPERS ----------------
+def clamp(v, lo, hi):
+    return max(lo, min(hi, v))
+
+# ---------------- MAIN LOOP ----------------
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    results = model(frame, conf=0.4, verbose=False)
+
+    if (
+        results
+        and results[0].keypoints is not None
+        and len(results[0].keypoints.xy) > 0
+    ):
+        kpts = results[0].keypoints.xy[0].cpu().numpy()
+
+        # ================= VOLUME SLIDER (UNCHANGED) =================
+        thumb = kpts[4]
+        index = kpts[8]
+
+        raw_dist = np.linalg.norm(thumb - index)
+        raw_dist = clamp(raw_dist, MIN_DIST, MAX_DIST)
+
+        if ema_dist is None:
+            ema_dist = raw_dist
+        else:
+            ema_dist = EMA_ALPHA * raw_dist + (1 - EMA_ALPHA) * ema_dist
+
+        target_volume = int(
+            np.interp(ema_dist, [MIN_DIST, MAX_DIST], [0, 100])
+        )
+
+        if prev_volume is None:
+            prev_volume = target_volume
+
+        delta = target_volume - prev_volume
+
+        if abs(delta) >= VOLUME_DEADZONE:
+            steps = int(abs(delta) / VOLUME_STEP_PERCENT)
+            key = "volume up" if delta > 0 else "volume down"
+
+            for _ in range(min(steps, 4)):
+                keyboard.send(key)
+
+            print(f"VOLUME: {target_volume}%")
+            prev_volume = target_volume
+
+        # ================= PLAY / PAUSE (HAND RAISE) =================
+        wrist_y = kpts[0][1]  # wrist keypoint
+        now = time.time()
+
+        if wrist_y < RAISE_THRESHOLD_Y:
+            if raise_start is None:
+                raise_start = now
+            elif (
+                now - raise_start > PLAY_HOLD_TIME
+                and not play_locked
+                and now - last_play_time > PLAY_COOLDOWN
+            ):
+                keyboard.send("play/pause media")
+                print("GESTURE: HAND RAISE → PLAY / PAUSE")
+                play_locked = True
+                last_play_time = now
+        else:
+            raise_start = None
+            play_locked = False
+
+        # (Optional) draw threshold line for feedback
+        cv2.line(frame, (0, RAISE_THRESHOLD_Y), (640, RAISE_THRESHOLD_Y), (0, 255, 0), 2)
+
+    annotated = results[0].plot() if results else frame
+    cv2.imshow("Stable Gesture Volume Control", annotated)
+
+    if cv2.waitKey(1) & 0xFF == ord("q"):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
