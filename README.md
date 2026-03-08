@@ -39,6 +39,9 @@ This project explores a "touchless alternative" using computer vision and AI-bas
 3. Interpret gestures
 4. Trigger media actions
 
+# Tutorial
+Follow the instructions in my repo.
+There is a seperate file for tutorial
 # Demo
 
 Demo Video:  
